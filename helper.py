@@ -1,6 +1,7 @@
 # !/usr/bin/python3
 
 import os
+import errno
 import sys
 from ftplib import FTP
 
@@ -10,6 +11,7 @@ def get_current_version():
         ftp.login()
         ftp.cwd('astra/unstable/smolensk/mounted-iso-main/')
         return ftp.nlst()[-1].split('-')[1][:-5]
+
 
 def make_dic(pack_list):
     pack_dic = {}
@@ -23,10 +25,12 @@ def make_dic(pack_list):
             pack_dic[name] = version[:-5]
     return pack_dic
 
+
 def packs_to_file(dist, pack_dic, file_name):
     with open(dist + file_name, 'w') as lst:
         for k in sorted(pack_dic.keys()):
             lst.write(k + '  ' + pack_dic[k] + '\n')
+
 
 def check_lists(list1, list2=None):
     if not os.path.exists(os.curdir + '/' + list1):
@@ -36,6 +40,7 @@ def check_lists(list1, list2=None):
         if not os.path.exists(os.curdir + '/' + list2):
             print("There is no package list for %s; pull it fist" % list2)
             sys.exit(2)
+
 
 def make_tree(version):
     if not os.path.exists(version):
@@ -51,28 +56,30 @@ def make_tree(version):
                 else:
                     raise
 
+
 def remove_dot(l):
     [l.remove(i) for i in l if i.startswith('.')]
 
-def get_pack_list(list):
+
+def get_pack_list(lst):
     """
     Returns 2 dicts {name:version} of main and devel
     branches of OS. Takes os.listdir list as param
-    :param list: list
+    :param lst: list
     :return: list
     """
-    # gets list of content in dir
-    dirs = sorted([i for i in os.listdir(list)])
-    remove_dot(dirs) # get rid of .svn
+    # gets lst of content in dir
+    dirs = sorted([i for i in os.listdir(lst)])
+    remove_dot(dirs)  # get rid of .svn
     # gets lists of subdirs in dirs
-    sub = [os.listdir(os.path.abspath(list + '/' + i)) for i in dirs]
+    sub = [os.listdir(os.path.abspath(lst + '/' + i)) for i in dirs]
     for i in sub:
-        remove_dot(i) # get rid of .svn in subdir list
+        remove_dot(i)  # get rid of .svn in subdir lst
     main, devel = {}, {}
     # make 2 dicts for main and devel brunches
     for i in range(len(dirs)):
         for k in sub[i]:
-            with open(os.path.abspath(list + '/' + dirs[i] + '/' + k), 'r') as p:
+            with open(os.path.abspath(lst + '/' + dirs[i] + '/' + k), 'r') as p:
                     for l in p.readlines():
                         x = (l.split())
                         if dirs[i] == 'main':
@@ -82,16 +89,18 @@ def get_pack_list(list):
 
     return main, devel
 
+
 def compare_pack_lists(dic1, dic2):
     """
     Compare 2 dictionaries, returns 4 lists
     a - item in dic1, not in dic2
     b - item in dic1 and dic2
-        versions missmatch
+        versions mismatch
     c - item in dic2, not in dic1
     d - item in dic1 and dic2
         name and version matches
-    :param dic: dict
+    :param dic1: dict
+    :param dic2: dict
     :return: list
     """
     a, b, c, d = [], [], [], []
@@ -107,4 +116,3 @@ def compare_pack_lists(dic1, dic2):
         if i not in dic1:
             c.append(i)
     return a, b, c, d
-

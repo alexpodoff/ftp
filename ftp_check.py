@@ -1,13 +1,11 @@
 # !/usr/bin/python3
 
-
-import json
 import os
 import socket
-import errno
 from ftplib import FTP
-from helper import *
+#from helper import *
 import sys
+import helper as hp
 
 __author__ = 'Pod'
 
@@ -33,7 +31,7 @@ if len(sys.argv) == 1:
     sys.exit(1)
 
 try:
-    version = get_current_version()
+    version = hp.get_current_version()
 except socket.error as ftp_err:
     print("\nCouldn't connect to FTP: " + str(ftp_err) + '\n')
     sys.exit(2)
@@ -57,6 +55,7 @@ smol_unstable_dev = 'astra/unstable/smolensk/mounted-iso-devel/pool/'
 # local dirs for stable and unstable lists
 se_stable = os.path.abspath(os.curdir) + '/' + version
 se_unstable = os.path.abspath(os.curdir) + '/' + version
+
 
 class PackList:
 
@@ -124,8 +123,8 @@ if __name__ == '__main__':
 
     if sys.argv[1] in ['-g', '--get']:
         if sys.argv[2] in ['1.5', 'stable']:
-            make_tree(se_stable)
-            print("Pulling %s package list from FTP ... please, stand by ..." %  sys.argv[2])
+            hp.make_tree(se_stable)
+            print("Pulling %s package list from FTP ... please, stand by ..." % sys.argv[2])
 
             s_main_pack = main_list.get_package_list(
                           smol_stable_main,
@@ -157,18 +156,17 @@ if __name__ == '__main__':
                                  nonfree_list.get_sub_dir_list(smol_stable_dev,
                                                                nonfree_list.get_dir_list(smol_stable_dev)))
 
-
-            packs_to_file(se_stable, make_dic(s_main_pack), '/main/main')
-            packs_to_file(se_stable, make_dic(s_nonfree_pack), '/main/non-free')
-            packs_to_file(se_stable, make_dic(s_contrib_pack), '/main/contrib')
-            packs_to_file(se_stable, make_dic(s_dev_main_pack), '/devel/main')
-            packs_to_file(se_stable, make_dic(s_dev_nonfree_pack), '/devel/non-free')
+            hp.packs_to_file(se_stable, hp.make_dic(s_main_pack), '/main/main')
+            hp.packs_to_file(se_stable, hp.make_dic(s_nonfree_pack), '/main/non-free')
+            hp.packs_to_file(se_stable, hp.make_dic(s_contrib_pack), '/main/contrib')
+            hp.packs_to_file(se_stable, hp.make_dic(s_dev_main_pack), '/devel/main')
+            hp.packs_to_file(se_stable, hp.make_dic(s_dev_nonfree_pack), '/devel/non-free')
 
             print("Operation complete")
 
         elif sys.argv[2] in ['unstable', version]:
-            make_tree(se_unstable)
-            print("Pulling %s package list from FTP ... please, stand by ..." %  sys.argv[2])
+            hp.make_tree(se_unstable)
+            print("Pulling %s package list from FTP ... please, stand by ..." % sys.argv[2])
 
             us_main_pack = main_list.get_package_list(
                            smol_unstable_main, main_list.get_dir_list(smol_unstable_main),
@@ -200,13 +198,12 @@ if __name__ == '__main__':
                                   contrib_list.get_sub_dir_list(smol_unstable_dev,
                                                                 contrib_list.get_dir_list(smol_unstable_dev)))
 
-
-            packs_to_file(se_unstable, make_dic(us_main_pack), '/main/main')
-            packs_to_file(se_unstable, make_dic(us_nonfree_pack), '/main/non-free')
-            packs_to_file(se_unstable, make_dic(us_contrib_pack), '/main/contrib')
-            packs_to_file(se_unstable, make_dic(us_dev_main_pack), '/devel/main')
-            packs_to_file(se_unstable, make_dic(us_dev_nonfree_pack), '/devel/non-free')
-            packs_to_file(se_unstable, make_dic(us_dev_contrib_pack), '/devel/contrib')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_main_pack), '/main/main')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_nonfree_pack), '/main/non-free')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_contrib_pack), '/main/contrib')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_dev_main_pack), '/devel/main')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_dev_nonfree_pack), '/devel/non-free')
+            hp.packs_to_file(se_unstable, hp.make_dic(us_dev_contrib_pack), '/devel/contrib')
 
             print("Operation complete")
 
@@ -237,33 +234,33 @@ if __name__ == '__main__':
                 sys.exit(5)
             elif sys.argv[2] in unstable_list and sys.argv[3] in unstable_list:
                 list1, list2 = sys.argv[2], sys.argv[3]
-            elif sys.argv[2] in unstable_list and sys.argv[3] in stable_list or \
-                 sys.argv[2] in stable_list and sys.argv[3] in unstable_list:
+            elif sys.argv[2] in unstable_list and sys.argv[3] in stable_list \
+                    or sys.argv[2] in stable_list and sys.argv[3] in unstable_list:
                 list1, list2 = sys.argv[2], sys.argv[3]
             else:
                 print(usage_help)
                 sys.exit(1)
 
-        check_lists(list1, list2)
-        main1, dev1 = get_pack_list(list1)
-        main2, dev2 = get_pack_list(list2)
+        hp.check_lists(list1, list2)
+        main1, dev1 = hp.get_pack_list(list1)
+        main2, dev2 = hp.get_pack_list(list2)
 
-        print("Compairing %s and %s ... please, stand by ..." % (list1, list2))
+        print("Comparing %s and %s ... please, stand by ..." % (list1, list2))
 
-        diff = os.path.abspath(os.curdir + '/diff_'+ list1 + '_' + list2)
+        diff = os.path.abspath(os.curdir + '/diff_' + list1 + '_' + list2)
         if os.path.exists(diff):
             os.remove(diff)
 
-        m1, m2, m3, m4 = compare_pack_lists(main1, main2)
-        d1, d2, d3, d4 = compare_pack_lists(dev1, dev2)
+        m1, m2, m3, m4 = hp.compare_pack_lists(main1, main2)
+        d1, d2, d3, d4 = hp.compare_pack_lists(dev1, dev2)
         moved, dev_moved = [], []
 
         with open(diff, 'a') as f:
             f.write("Comparison between %s and %s:\n" % (list1, list2))
-            f.write("\nnot in: " + str(len(m1+d1)) + \
-                       "\nversion: " + str(len(m2+d2)) + \
-                       "\nnew: " +  str(len(m3+d3)) + \
-                       "\nsame: " + str(len(m4+d4)) + '\n\n')
+            f.write("\nnot in: " + str(len(m1+d1)) +
+                    "\nversion: " + str(len(m2+d2)) +
+                    "\nnew: " + str(len(m3+d3)) +
+                    "\nsame: " + str(len(m4+d4)) + '\n\n')
 
             f.write("MAIN brunch:\n")
             for i in sorted(m1):
@@ -275,8 +272,8 @@ if __name__ == '__main__':
                 f.write(str(i) + " moved to devel disk of " + str(list2) + '\n')
 
             for i in sorted(m2):
-                f.write(str(i) + " version " + main1[i] + " changed in " + \
-                           str(list2) + ' to version ' + main2[i] + '\n')
+                f.write(str(i) + " version " + main1[i] + " changed in " +
+                        str(list2) + ' to version ' + main2[i] + '\n')
 
             for i in sorted(m3):
                 f.write(str(i) + " is a new pack in " + str(list2) + '\n')
@@ -295,8 +292,8 @@ if __name__ == '__main__':
                 f.write(str(i) + " moved to main disk of " + str(list2) + '\n')
 
             for i in sorted(d2):
-                f.write(str(i) + " version " + dev1[i] + " changed in " + \
-                           str(list2) + " to version " + dev2[i] + '\n')
+                f.write(str(i) + " version " + dev1[i] + " changed in " +
+                        str(list2) + " to version " + dev2[i] + '\n')
 
             for i in sorted(d3):
                 f.write(str(i) + " is a new pack in " + str(list2) + '\n')
